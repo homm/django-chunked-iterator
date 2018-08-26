@@ -1,19 +1,19 @@
 sudo: false
+dist: xenial
 language: python
 python:
-  - 2.7
   - 3.6
-  - 3.7
 env:
   - DJANGO=1.11
   - DJANGO=2.0
   - DJANGO=2.1
 matrix:
-  exclude:
+  include:
     - python: 2.7
-      env: DJANGO=2.0
-    - python: 2.7
+      env: DJANGO=1.11
+    - python: 3.7
       env: DJANGO=2.1
+      sudo: true
 
 before_install:
   - pip install django~=$DJANGO.0
