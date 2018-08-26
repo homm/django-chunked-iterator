@@ -19,7 +19,11 @@ settings.configure(
             'NAME': join(project_dir, 'db.sqlite3'),
         },
     },
-    INSTALLED_APPS=['test_project'],
+    INSTALLED_APPS=[
+        'test_project',
+        'django_nose',
+    ],
+    TEST_RUNNER='django_nose.NoseTestSuiteRunner',
 )
 
 

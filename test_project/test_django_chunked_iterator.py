@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from django.utils import timezone
 from django.test import TestCase
-from nose_parameterized import parameterized
+from parameterized import parameterized
 
 from django_chunked_iterator import iterator_batch, iterator
 

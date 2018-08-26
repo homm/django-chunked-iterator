@@ -1,0 +1,4 @@
+django
+django_nose
+parameterized
+coveralls
