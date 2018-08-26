@@ -1,3 +1,7 @@
+from __future__ import print_function, unicode_literals, division
+
+import time
+import math
 import random
 from datetime import datetime, timedelta
 
@@ -11,7 +15,7 @@ from test_project.models import Item
 
 
 class DjangoChunkedIteratorTest(TestCase):
-    N = 5000  # Number of test files
+    N = 7000  # Number of test files
     qs = Item.objects.all()
 
     @classmethod
@@ -42,11 +46,13 @@ class DjangoChunkedIteratorTest(TestCase):
         self.assertEqual(count, total)
 
     def test_batch_size(self):
-        for batch in iterator_batch(self.qs, batch_size=11, limit=33):
-            self.assertEqual(len(batch), 11)
+        with self.assertNumQueries(3):
+            for batch in iterator_batch(self.qs, batch_size=11, limit=33):
+                self.assertEqual(len(batch), 11)
 
-        for batch in iterator_batch(self.qs, 345):
-            self.assertIn(len(batch), (345, 170))
+        with self.assertNumQueries(math.ceil(self.N / 345)):
+            for batch in iterator_batch(self.qs, 345):
+                self.assertIn(len(batch), (345, self.N % 345))
 
     def test_order_by(self):
         # default is pk
@@ -80,4 +86,50 @@ class DjangoChunkedIteratorTest(TestCase):
         for item in iterator(self.qs, 9, '-pk', last_pk, limit=100):
             self.assertEqual(item.pk - last_pk, -1)
             last_pk = item.pk
+
+    def test_first_start_time(self):
+        start = time.time()
+        for item in self.qs.all():
+            break
+        default_time = time.time() - start
+
+        start = time.time()
+        for item in self.qs.iterator():
+            break
+        iterator_time = time.time() - start
+
+        start = time.time()
+        for item in iterator(self.qs, 100):
+            break
+        chunked_iterator_time = time.time() - start
+
+        print('>>> Default', default_time)
+        print('>>> Iterator', iterator_time)
+        print('>>> Chunked iterator', chunked_iterator_time)
+
+        self.assertLess(chunked_iterator_time * 10, iterator_time)
+        self.assertLess(chunked_iterator_time * 20, default_time)
+
+    def test_total_time(self):
+        start = time.time()
+        for item in self.qs.all():
+            pass
+        default_time = time.time() - start
+
+        start = time.time()
+        for item in self.qs.iterator():
+            pass
+        iterator_time = time.time() - start
+
+        start = time.time()
+        for item in iterator(self.qs, 200):
+            pass
+        chunked_iterator_time = time.time() - start
+
+        print('>>> Default', default_time)
+        print('>>> Iterator', iterator_time)
+        print('>>> Chunked iterator', chunked_iterator_time)
+
+        self.assertLess(chunked_iterator_time, iterator_time * 1.6)
+        self.assertLess(chunked_iterator_time, default_time * 1.6)
 

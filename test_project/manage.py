@@ -17,6 +17,7 @@ settings.configure(
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': join(project_dir, 'db.sqlite3'),
+            'DISABLE_SERVER_SIDE_CURSORS': True,
         },
     },
     INSTALLED_APPS=[
