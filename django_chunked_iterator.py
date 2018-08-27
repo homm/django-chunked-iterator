@@ -1,7 +1,7 @@
 from __future__ import unicode_literals, absolute_import
 
 
-def iterator_batch(qs, batch_size=1000,
+def batch_iterator(qs, batch_size=1000,
                    order_by='pk', start_with=None, limit=None):
     qs = qs.order_by(order_by)
 
@@ -34,6 +34,6 @@ def iterator_batch(qs, batch_size=1000,
 
 
 def iterator(qs, batch_size=1000, order_by='pk', start_with=None, limit=None):
-    for batch in iterator_batch(qs, batch_size, order_by, start_with, limit):
+    for batch in batch_iterator(qs, batch_size, order_by, start_with, limit):
         for item in batch:
             yield item

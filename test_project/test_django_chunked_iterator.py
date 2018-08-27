@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.test import TestCase
 from parameterized import parameterized
 
-from django_chunked_iterator import iterator_batch, iterator
+from django_chunked_iterator import batch_iterator, iterator
 
 from test_project.models import Item
 
@@ -40,18 +40,18 @@ class DjangoChunkedIteratorTest(TestCase):
     ])
     def test_limit(self, limit, batch_sizes, total):
         count = 0
-        for batch in iterator_batch(self.qs, limit=limit):
+        for batch in batch_iterator(self.qs, limit=limit):
             self.assertIn(len(batch), batch_sizes)
             count += len(batch)
         self.assertEqual(count, total)
 
     def test_batch_size(self):
         with self.assertNumQueries(3):
-            for batch in iterator_batch(self.qs, batch_size=11, limit=33):
+            for batch in batch_iterator(self.qs, batch_size=11, limit=33):
                 self.assertEqual(len(batch), 11)
 
         with self.assertNumQueries(math.ceil(self.N / 345)):
-            for batch in iterator_batch(self.qs, 345):
+            for batch in batch_iterator(self.qs, 345):
                 self.assertIn(len(batch), (345, self.N % 345))
 
     def test_order_by(self):
