@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
+import io
 from os.path import abspath, dirname, join
 from setuptools import setup
 
 
 here = abspath(dirname(__file__))
-with open(join(here, 'README.md'), encoding='utf-8') as f:
+with io.open(join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
     name='django-chunked-iterator',
-    version='0.5',
+    version='0.6',
     description='Iterates Django querysets by chunks, saving memory and allows to start faster.',
     author='Alexander Karpinsky',
     author_email='homm86@gmail.com',
