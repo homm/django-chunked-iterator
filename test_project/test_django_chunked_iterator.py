@@ -3,8 +3,10 @@ from __future__ import print_function, unicode_literals, division
 import time
 import math
 import random
+import unittest
 from datetime import datetime, timedelta
 
+import django
 from django.utils import timezone
 from django.test import TestCase
 from parameterized import parameterized
@@ -92,19 +94,18 @@ class DjangoChunkedIteratorTest(TestCase):
         for item in self.qs.all():
             break
         default_time = time.time() - start
+        print('>>> Default', default_time)
 
         start = time.time()
         for item in self.qs.iterator():
             break
         iterator_time = time.time() - start
+        print('>>> Iterator', iterator_time)
 
         start = time.time()
         for item in iterator(self.qs, 100):
             break
         chunked_iterator_time = time.time() - start
-
-        print('>>> Default', default_time)
-        print('>>> Iterator', iterator_time)
         print('>>> Chunked iterator', chunked_iterator_time)
 
         self.assertLess(chunked_iterator_time * 10, iterator_time)
@@ -115,21 +116,68 @@ class DjangoChunkedIteratorTest(TestCase):
         for item in self.qs.all():
             pass
         default_time = time.time() - start
+        print('>>> Default', default_time)
 
         start = time.time()
         for item in self.qs.iterator():
             pass
         iterator_time = time.time() - start
+        print('>>> Iterator', iterator_time)
 
         start = time.time()
         for item in iterator(self.qs, 200):
             pass
         chunked_iterator_time = time.time() - start
-
-        print('>>> Default', default_time)
-        print('>>> Iterator', iterator_time)
         print('>>> Chunked iterator', chunked_iterator_time)
 
         self.assertLess(chunked_iterator_time, iterator_time * 1.6)
         self.assertLess(chunked_iterator_time, default_time * 1.6)
+
+    def test_slice(self):
+        with self.assertRaises(AssertionError):
+            for item in iterator(self.qs[:10000]):
+                break
+
+    def test_manager(self):
+        for item in iterator(Item.objects, limit=10):
+            self.assertIsInstance(item, Item)
+
+    @unittest.skipIf(django.VERSION < (2, 0), 'Only supported in Django 2.0')
+    def test_named_values_list(self):
+        qs = self.qs.values_list('pk', 'created', named=True)
+        last_pk = 0
+        for item in iterator(qs, 9, limit=100):
+            self.assertEqual(item.pk - last_pk, 1)
+            last_pk = item.pk
+
+        qs = self.qs.values_list('pk', 'created', named=True)
+        last_created = datetime.max
+        for item in iterator(qs, 9, '-created', limit=100):
+            self.assertLess(item.created, last_created)
+            last_created = item.created
+
+        qs = self.qs.values_list('id', 'created', named=True)
+        msg = "`pk` field should be in returned objects"
+        with self.assertRaisesRegex(ValueError, msg):
+            for item in iterator(qs, 9, limit=100):
+                pass
+
+    def test_values(self):
+        qs = self.qs.values()
+        last_pk = 0
+        for item in iterator(qs, 9, 'id', limit=100):
+            self.assertEqual(item['id'] - last_pk, 1)
+            last_pk = item['id']
+
+        qs = self.qs.values('pk', 'created')
+        last_pk = 0
+        for item in iterator(qs, 9, limit=100):
+            self.assertEqual(item['pk'] - last_pk, 1)
+            last_pk = item['pk']
+
+        qs = self.qs.values()
+        msg = "`pk` field should be in returned objects"
+        with self.assertRaisesRegex(ValueError, msg):
+            for item in iterator(qs, 9, limit=100):
+                pass
 

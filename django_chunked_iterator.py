@@ -24,7 +24,17 @@ def batch_iterator(qs, batch_size=1000,
         if limit is not None:
             limit -= returned
         if returned:
-            start_with = getattr(items[-1], order_by)
+            last_item = items[-1]
+            try:
+                start_with = getattr(last_item, order_by)
+            except AttributeError:
+                try:
+                    start_with = last_item[order_by]
+                except (KeyError, TypeError):
+                    raise ValueError(
+                        '`{0}` field should be in returned objects. '
+                        'Please add it to `.values()` or `.values_list()` or '
+                        'use different field as `order_by`.'.format(order_by))
 
             yield items
 
