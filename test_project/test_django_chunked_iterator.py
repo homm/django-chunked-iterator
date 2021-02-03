@@ -162,6 +162,32 @@ class DjangoChunkedIteratorTest(TestCase):
             for item in iterator(qs, 9, limit=100):
                 pass
 
+    def test_values_list(self):
+        qs = self.qs.values_list('id', 'created')
+        last_pk = 0
+        for item in iterator(qs, 9, 'id', limit=100):
+            self.assertEqual(item[0] - last_pk, 1)
+            last_pk = item[0]
+
+        qs = self.qs.values_list('created')
+        msg = "and it should go first"
+        with self.assertRaisesRegex(ValueError, msg):
+            for item in iterator(qs, 9, limit=100):
+                pass
+
+    def test_values_list_flat(self):
+        qs = self.qs.values_list('id', flat=True)
+        last_pk = 0
+        for item in iterator(qs, 9, 'id', limit=100):
+            self.assertEqual(item - last_pk, 1)
+            last_pk = item
+
+        qs = self.qs.values_list('created', flat=True)
+        msg = "and it should go first"
+        with self.assertRaisesRegex(ValueError, msg):
+            for item in iterator(qs, 9, limit=100):
+                pass
+
     def test_values(self):
         qs = self.qs.values()
         last_pk = 0
@@ -180,4 +206,3 @@ class DjangoChunkedIteratorTest(TestCase):
         with self.assertRaisesRegex(ValueError, msg):
             for item in iterator(qs, 9, limit=100):
                 pass
-
