@@ -82,19 +82,19 @@ for e in iterator(Entry.objects.all()):
 
 #### Limit number of returned rows
 
-WRONG!
-
-```python
-for e in iterator(Entry.objects.all()[:10000]):
-    print(e.headline)
-AssertionError: Cannot reorder a query once a slice has been taken.
-```
-
 Right:
 
 ```python
 for e in iterator(Entry.objects.all(), limit=10000):
     print(e.headline)
+```
+
+Wrong:
+
+```python
+for e in iterator(Entry.objects.all()[:10000]):
+    print(e.headline)
+AssertionError: Cannot reorder a query once a slice has been taken.
 ```
 
 #### Change batch size
